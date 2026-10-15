@@ -1,6 +1,6 @@
 # Iron Golem Troll
 
-Minecraft **26.2** için sunucu taraflı bir Fabric modu. Bir demir golemi vurduğunda golem eline demir blok alır ve altına blok koyarak 3 blok yukarı tırmanır. Tırmanış bitene kadar kimseye vuramaz. Tekrar vurmak için yanına çıkman gerekir; vurduğunda 3 blok daha tırmanır. Böylece sonsuza kadar yükselen bir demir kule oluşur.
+Minecraft **26.2** için sunucu taraflı bir Fabric modu. Bir demir golemi vurduğunda golem eline demir blok alır, dibine kadar yürür ve senin hemen yanında altına demir blok koyarak 3 blok yukarı tırmanır. Bu bitene kadar kimseye vuramaz. Kuleni yükseltip tekrar vurursan golem zaten yanında olduğu için 3 blok daha tırmanır. Böylece sonsuza kadar yükselen bir demir kule oluşur.
 
 Konulan demir bloklar kalıcıdır ve normal demir blok gibi kırılabilir.
 
@@ -33,6 +33,8 @@ Mod sadece sunucuda çalışır. İstemcide yüklü olması gerekmez, yüklüyse
 ./gradlew build
 ```
 Bu komut birim testlerini ve oyun içi testleri (GameTest) de çalıştırır. Jar `build/libs/` klasörüne çıkar.
+
+Görsel kontrol için `./gradlew runClientGameTest` gerçek bir oyun penceresi açar. Bu testte oyuncu kulenin üstünden golemi sol tıkla vurur ve ekran görüntüleri `build/run/clientGameTest/screenshots/` klasörüne kaydedilir.
 
 Windows'ta `install.bat` modu derler, MehburMC test instance'ına kurar ve eksikse Fabric API'yi indirir.
 

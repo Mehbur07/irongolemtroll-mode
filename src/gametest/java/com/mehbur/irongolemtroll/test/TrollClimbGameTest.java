@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * In-world tests for the climbing golem, using fake players as attackers.
+ * In-world tests for the troll golem, using fake players as attackers.
  *
  * <p>Tests run in parallel and share one climb manager, so every test uses its own
  * golems and only checks those. {@code skyAccess} keeps the test frame from adding a
@@ -32,15 +32,39 @@ public class TrollClimbGameTest {
 	private static final AtomicInteger PLAYER_COUNTER = new AtomicInteger();
 	private static final int CLIMB_BLOCKS = 3;
 
+	@GameTest(maxTicks = 300, skyAccess = true)
+	public void golemWalksToPlayerOnPillarAndClimbsBesideThem(GameTestHelper helper) {
+		// The situation from the screenshot: the player stands on a 3 block pillar.
+		for (int y = 1; y <= 3; y++) {
+			helper.setBlock(5, y, 2, Blocks.OAK_PLANKS);
+		}
+		floor(helper);
+		IronGolem golem = spawnGolem(helper, 1);
+		FakePlayer player = spawnPlayer(helper, 5.5, 4, 2.5);
+		BlockPos column = player.blockPosition().below(3).west(); // ground cell next to the pillar, golem side
+
+		hit(helper, player, golem, 1.0f);
+		helper.assertTrue(climbs().isClimbing(golem), "hit did not start the troll");
+
+		helper.succeedWhen(() -> {
+			assertClimbDone(helper, golem);
+			assertPillar(helper, column, CLIMB_BLOCKS);
+			helper.assertTrue(Math.abs(golem.getY() - player.getY()) < 0.01, "golem did not end at the player's height");
+			// Flush against the face of the player's pillar.
+			double gap = (column.getX() + 1) - golem.getBoundingBox().maxX;
+			helper.assertTrue(gap >= 0.0 && gap < 0.05, "golem is " + gap + " blocks away from the player's pillar");
+		});
+	}
+
 	@GameTest(maxTicks = 200, skyAccess = true)
-	public void hitMakesGolemPillarUpThreeIronBlocks(GameTestHelper helper) {
+	public void golemNextToPlayerClimbsThreeIronBlocks(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
-		BlockPos column = golem.blockPosition();
+		BlockPos column = player.blockPosition().west();
 		double startY = golem.getY();
 
 		hit(helper, player, golem, 1.0f);
-		helper.assertTrue(climbs().isClimbing(golem), "hit did not start a climb");
 
 		helper.succeedWhen(() -> {
 			assertClimbDone(helper, golem);
@@ -50,34 +74,42 @@ public class TrollClimbGameTest {
 		});
 	}
 
-	@GameTest(maxTicks = 300, skyAccess = true)
-	public void nextHitAfterClimbGoesHigher(GameTestHelper helper) {
+	@GameTest(maxTicks = 400, skyAccess = true)
+	public void playerBuildsHigherAndGolemFollows(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
-		BlockPos column = golem.blockPosition();
+		BlockPos column = player.blockPosition().west();
 
 		hit(helper, player, golem, 1.0f);
 		helper.startSequence()
 				.thenWaitUntil(() -> assertClimbDone(helper, golem))
 				.thenExecute(() -> {
-					// The player has climbed up as well and hits again.
-					player.setPos(player.getX(), golem.getY(), player.getZ());
+					// The player pillars up 3 blocks and hits the golem again from up there.
+					for (int y = 1; y <= 3; y++) {
+						helper.setBlock(4, y, 2, Blocks.OAK_PLANKS);
+					}
+					player.setPos(player.getX(), player.getY() + 3, player.getZ());
 					hit(helper, player, golem, 1.0f);
 					helper.assertTrue(climbs().isClimbing(golem), "second hit did not start a climb");
 				})
 				.thenWaitUntil(() -> assertClimbDone(helper, golem))
-				.thenExecute(() -> assertPillar(helper, column, 2 * CLIMB_BLOCKS))
+				.thenExecute(() -> {
+					assertPillar(helper, column, 2 * CLIMB_BLOCKS);
+					helper.assertTrue(Math.abs(golem.getY() - (player.getY() + 3)) < 0.01, "golem is not 3 above the player");
+				})
 				.thenSucceed();
 	}
 
 	@GameTest(maxTicks = 200, skyAccess = true)
 	public void hitDuringClimbDoesNotExtendIt(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
-		BlockPos column = golem.blockPosition();
+		BlockPos column = player.blockPosition().west();
 
 		hit(helper, player, golem, 1.0f);
-		helper.runAfterDelay(6, () -> hit(helper, player, golem, 1.0f));
+		helper.runAfterDelay(15, () -> hit(helper, player, golem, 1.0f));
 
 		helper.succeedWhen(() -> {
 			assertClimbDone(helper, golem);
@@ -86,7 +118,8 @@ public class TrollClimbGameTest {
 	}
 
 	@GameTest(maxTicks = 200, skyAccess = true)
-	public void golemCannotHurtWhileClimbing(GameTestHelper helper) {
+	public void golemCannotHurtUntilClimbIsOver(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
 		Pig pig = helper.spawn(EntityTypes.PIG, new BlockPos(5, 1, 5));
@@ -94,8 +127,8 @@ public class TrollClimbGameTest {
 
 		hit(helper, player, golem, 1.0f);
 		float before = pig.getHealth();
-		helper.assertTrue(!golem.doHurtTarget(level, pig), "climbing golem landed a hit");
-		helper.assertTrue(pig.getHealth() == before, "climbing golem dealt damage");
+		helper.assertTrue(!golem.doHurtTarget(level, pig), "troll golem landed a hit");
+		helper.assertTrue(pig.getHealth() == before, "troll golem dealt damage");
 
 		helper.succeedWhen(() -> {
 			assertClimbDone(helper, golem);
@@ -106,11 +139,12 @@ public class TrollClimbGameTest {
 
 	@GameTest(maxTicks = 200, skyAccess = true)
 	public void ceilingStopsClimbEarly(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
-		BlockPos column = golem.blockPosition();
+		BlockPos column = player.blockPosition().west();
 		// Golem is 2.7 tall: from y=1 one hop fits under y=5, from y=2 the next does not.
-		for (int x = 1; x <= 3; x++) {
+		for (int x = 1; x <= 4; x++) {
 			for (int z = 1; z <= 3; z++) {
 				helper.setBlock(x, 5, z, Blocks.STONE);
 			}
@@ -126,6 +160,7 @@ public class TrollClimbGameTest {
 
 	@GameTest(maxTicks = 200, skyAccess = true)
 	public void heldIronBlockIsShownThenRemoved(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
 
@@ -145,6 +180,7 @@ public class TrollClimbGameTest {
 
 	@GameTest(maxTicks = 40, skyAccess = true)
 	public void golemDeathEndsClimbAndRemovesBlock(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
 
@@ -161,6 +197,7 @@ public class TrollClimbGameTest {
 
 	@GameTest(maxTicks = 20, skyAccess = true)
 	public void killingBlowStartsNoClimb(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
 
@@ -173,6 +210,7 @@ public class TrollClimbGameTest {
 
 	@GameTest(maxTicks = 20, skyAccess = true)
 	public void farAwayHitStartsNoClimb(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golem = spawnGolem(helper, 2);
 		FakePlayer player = spawnPlayer(helper, 4.5, 1, 2.5);
 		player.setPos(player.getX() + 20, player.getY(), player.getZ());
@@ -185,9 +223,10 @@ public class TrollClimbGameTest {
 
 	@GameTest(maxTicks = 200, skyAccess = true)
 	public void golemsClimbIndependently(GameTestHelper helper) {
+		floor(helper);
 		IronGolem golemA = spawnGolem(helper, 1);
-		IronGolem golemB = spawnGolem(helper, 4);
-		FakePlayer player = spawnPlayer(helper, 2.5, 1, 4.5);
+		IronGolem golemB = spawnGolem(helper, 5);
+		FakePlayer player = spawnPlayer(helper, 1.5, 1, 5.5);
 		BlockPos columnB = golemB.blockPosition();
 
 		hit(helper, player, golemA, 1.0f);
@@ -195,6 +234,7 @@ public class TrollClimbGameTest {
 
 		helper.succeedWhen(() -> {
 			assertClimbDone(helper, golemA);
+			assertPillar(helper, player.blockPosition().north(), CLIMB_BLOCKS);
 			assertPillar(helper, columnB, 0);
 		});
 	}
@@ -219,7 +259,7 @@ public class TrollClimbGameTest {
 	}
 
 	private static void assertClimbDone(GameTestHelper helper, IronGolem golem) {
-		helper.assertTrue(!climbs().isClimbing(golem), "golem is still climbing");
+		helper.assertTrue(!climbs().isClimbing(golem), "golem is still busy");
 		helper.assertTrue(golem.onGround(), "golem has not landed");
 	}
 
@@ -227,7 +267,8 @@ public class TrollClimbGameTest {
 	private static void assertPillar(GameTestHelper helper, BlockPos column, int count) {
 		ServerLevel level = helper.getLevel();
 		for (int i = 0; i < count; i++) {
-			helper.assertTrue(level.getBlockState(column.above(i)).is(Blocks.IRON_BLOCK), "no iron block at pillar level " + i);
+			helper.assertTrue(level.getBlockState(column.above(i)).is(Blocks.IRON_BLOCK),
+					"no iron block at pillar level " + i + " of " + column);
 		}
 		helper.assertTrue(!level.getBlockState(column.above(count)).is(Blocks.IRON_BLOCK), "pillar is higher than " + count);
 	}
@@ -241,15 +282,19 @@ public class TrollClimbGameTest {
 		return null;
 	}
 
-	/** Spawns a golem on a stone floor at relative (x, 1, 2). */
-	private static IronGolem spawnGolem(GameTestHelper helper, int x) {
-		for (int fx = 0; fx < 7; fx++) {
-			for (int fz = 0; fz < 7; fz++) {
-				helper.setBlock(fx, 0, fz, Blocks.STONE);
+	/** Stone floor under the whole 7x7 test area. */
+	private static void floor(GameTestHelper helper) {
+		for (int x = 0; x < 7; x++) {
+			for (int z = 0; z < 7; z++) {
+				helper.setBlock(x, 0, z, Blocks.STONE);
 			}
 		}
+	}
+
+	/** Spawns a player-built golem (never fights players back) at relative (x, 1, 2). */
+	private static IronGolem spawnGolem(GameTestHelper helper, int x) {
 		IronGolem golem = helper.spawn(EntityTypes.IRON_GOLEM, new BlockPos(x, 1, 2));
-		golem.setPlayerCreated(true); // player-built golems never fight players back
+		golem.setPlayerCreated(true);
 		return golem;
 	}
 

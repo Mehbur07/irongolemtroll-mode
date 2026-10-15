@@ -39,8 +39,15 @@ final class HeldBlockDisplay {
 			return null;
 		}
 
+		// Everything is set before spawning: the client gets the display's data once, when it
+		// starts tracking it, and later changes to the transformation are not reliably applied.
 		display.setBlockState(Blocks.IRON_BLOCK.defaultBlockState());
-		display.snapTo(golem.getX(), golem.getY(), golem.getZ(), golem.yBodyRot, 0.0f);
+		// Riding puts the display at the golem's passenger point; shift the block back down to the hand.
+		float riderOffset = (float) (golem.getPassengerRidingPosition(display).y - golem.getY());
+		Vector3f corner = new Vector3f(HAND).sub(SCALE / 2, SCALE / 2 + riderOffset, SCALE / 2);
+		display.setTransformation(new Transformation(corner, new Quaternionf(), new Vector3f(SCALE), new Quaternionf()));
+		display.snapTo(golem.getX(), golem.getY() + riderOffset, golem.getZ(), golem.yBodyRot, 0.0f);
+
 		if (!level.addFreshEntity(display)) {
 			return null;
 		}
@@ -51,11 +58,6 @@ final class HeldBlockDisplay {
 			display.discard();
 			return null;
 		}
-
-		// Riding moves the display to the golem's passenger point; shift the block back down to the hand.
-		float riderOffset = (float) (golem.getPassengerRidingPosition(display).y - golem.getY());
-		Vector3f corner = new Vector3f(HAND).sub(SCALE / 2, SCALE / 2 + riderOffset, SCALE / 2);
-		display.setTransformation(new Transformation(corner, new Quaternionf(), new Vector3f(SCALE), new Quaternionf()));
 		return display;
 	}
 

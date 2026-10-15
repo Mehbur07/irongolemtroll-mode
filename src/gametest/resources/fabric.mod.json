@@ -7,6 +7,9 @@
 	"entrypoints": {
 		"fabric-gametest": [
 			"com.mehbur.irongolemtroll.test.TrollClimbGameTest"
+		],
+		"fabric-client-gametest": [
+			"com.mehbur.irongolemtroll.test.TrollVisualClientGameTest"
 		]
 	},
 	"depends": {

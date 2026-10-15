@@ -21,13 +21,14 @@ loom {
 	}
 }
 
-// In-world server game tests (src/gametest), run as part of `build`
+// In-world tests (src/gametest): server game tests run as part of `build`,
+// the visual client test opens a game window and runs with `runClientGameTest`.
 fabricApi {
 	configureTests {
 		createSourceSet = true
 		modId = "iron_golem_troll_test"
 		enableGameTests = true
-		enableClientGameTests = false
+		enableClientGameTests = true
 		eula = true
 	}
 }

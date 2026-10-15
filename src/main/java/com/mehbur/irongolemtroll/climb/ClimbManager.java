@@ -22,11 +22,11 @@ import java.util.UUID;
  *
  * <ol>
  *     <li>A player hits an iron golem.</li>
- *     <li>The golem takes an iron block in hand and pillars up {@code climbBlocks}
- *     blocks, leaving a permanent iron pillar.</li>
- *     <li>Until the climb is over the golem cannot hurt anyone.</li>
- *     <li>To hit it again the player has to get up there, and the next hit sends it
- *     even higher, so the loop can go on forever.</li>
+ *     <li>The golem takes an iron block in hand, walks right up to the player and
+ *     pillars up {@code climbBlocks} blocks next to them, leaving a permanent iron pillar.</li>
+ *     <li>Until that is over the golem cannot hurt anyone.</li>
+ *     <li>If the player builds higher and hits again, the golem, already standing next
+ *     to them, climbs on, so the loop can go on forever.</li>
  * </ol>
  *
  * <p>Everything runs on the server thread; vanilla entity tracking syncs motion,
@@ -56,7 +56,7 @@ public final class ClimbManager implements TrollControl {
 		}
 
 		int now = player.level().getServer().getTickCount();
-		climbs.put(golem.getUUID(), new Climb(golem, config.climbBlocks, now));
+		climbs.put(golem.getUUID(), new Climb(golem, player, config.climbBlocks, now));
 	}
 
 	/** Hooked to {@code ServerLivingEntityEvents.ALLOW_DAMAGE}: a climbing golem deals no damage. */
