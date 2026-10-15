@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "iron_golem_troll",
+	"version": "${version}",
+	"name": "Iron Golem Troll",
+	"description": "Hit an iron golem and get stuck in an endless rising loop with it. Server-side only, safe on clients.",
+	"authors": [
+		"Mehbur07"
+	],
+	"license": "MIT",
+	"icon": "assets/iron_golem_troll/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.mehbur.irongolemtroll.IronGolemTroll"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

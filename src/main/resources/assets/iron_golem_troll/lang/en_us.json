@@ -1,0 +1,9 @@
+{
+	"iron_golem_troll.command.enabled": "Iron Golem Troll enabled.",
+	"iron_golem_troll.command.disabled": "Iron Golem Troll disabled. All active loops were stopped.",
+	"iron_golem_troll.command.reloaded": "Iron Golem Troll config reloaded.",
+	"iron_golem_troll.command.reload_failed": "Could not reload the config, see the server log.",
+	"iron_golem_troll.command.status": "Iron Golem Troll is %s. Active loops: %s",
+	"iron_golem_troll.state.on": "ON",
+	"iron_golem_troll.state.off": "OFF"
+}
