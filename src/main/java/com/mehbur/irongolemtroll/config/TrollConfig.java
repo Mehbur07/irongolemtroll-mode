@@ -18,8 +18,9 @@ import java.nio.file.Path;
  * JSON backed configuration stored at {@code config/iron_golem_troll.json}.
  *
  * <p>Field names are the JSON keys, so renaming a field breaks existing files.
- * Missing keys fall back to the defaults below, and out-of-range values are
- * clamped by {@link #validate()}.
+ * Missing keys fall back to the defaults below, unknown keys (e.g. from older
+ * versions) are dropped on the next save, and out-of-range values are clamped
+ * by {@link #validate()}.
  */
 public final class TrollConfig {
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -29,16 +30,10 @@ public final class TrollConfig {
 
 	/** Master switch, also toggled by {@code /igtroll on|off|toggle}. */
 	public boolean enabled = true;
-	/** Blocks the player must rise above the hit height, and blocks the golem is launched. */
-	public double riseHeight = 3.0;
-	/** Ticks after a hit during which the player reaching the target height triggers the golem. */
-	public int triggerWindowTicks = 40;
-	/** Loop stops when the player is farther than this from the golem. */
+	/** Iron blocks the golem stacks under itself (and so blocks it climbs) per hit. */
+	public int climbBlocks = 3;
+	/** Hits from players farther away than this (e.g. arrows) do not start a climb. */
 	public double maxDistance = 10.0;
-	/** Loop stops when the player stands on the ground this long without hitting the golem. */
-	public int cooldownResetSeconds = 5;
-	/** If true the golem throws the player up by {@link #riseHeight} on every hit, which starts the loop. */
-	public boolean golemLaunchesPlayer = true;
 
 	public static TrollConfig get() {
 		return instance;
@@ -89,10 +84,8 @@ public final class TrollConfig {
 
 	/** Clamps every value into a range the loop logic can safely use. */
 	private void validate() {
-		riseHeight = clamp(riseHeight, 0.5, 64.0, 3.0);
-		triggerWindowTicks = (int) clamp(triggerWindowTicks, 1, 1200, 40);
+		climbBlocks = (int) clamp(climbBlocks, 1, 64, 3);
 		maxDistance = clamp(maxDistance, 1.0, 128.0, 10.0);
-		cooldownResetSeconds = (int) clamp(cooldownResetSeconds, 1, 600, 5);
 	}
 
 	private static double clamp(double value, double min, double max, double fallback) {

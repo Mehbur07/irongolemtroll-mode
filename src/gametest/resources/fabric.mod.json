@@ -6,7 +6,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"fabric-gametest": [
-			"com.mehbur.irongolemtroll.test.TrollLoopGameTest"
+			"com.mehbur.irongolemtroll.test.TrollClimbGameTest"
 		]
 	},
 	"depends": {

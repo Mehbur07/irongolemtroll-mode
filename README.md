@@ -1,6 +1,8 @@
 # Iron Golem Troll
 
-Minecraft **26.2** için sunucu taraflı bir Fabric modu. Bir demir golemi vurduğunda golem seni yukarı fırlatır. Sen vuruş yüksekliğinin 3 blok üstüne çıkınca golem de 3 blok fırlar. Havada tekrar vurursan döngü sonsuza kadar sürer.
+Minecraft **26.2** için sunucu taraflı bir Fabric modu. Bir demir golemi vurduğunda golem eline demir blok alır ve altına blok koyarak 3 blok yukarı tırmanır. Tırmanış bitene kadar kimseye vuramaz. Tekrar vurmak için yanına çıkman gerekir; vurduğunda 3 blok daha tırmanır. Böylece sonsuza kadar yükselen bir demir kule oluşur.
+
+Konulan demir bloklar kalıcıdır ve normal demir blok gibi kırılabilir.
 
 ## Gereksinimler
 | Bileşen | Sürüm |
@@ -16,24 +18,21 @@ Mod sadece sunucuda çalışır. İstemcide yüklü olması gerekmez, yüklüyse
 | Anahtar | Varsayılan | Açıklama |
 |---|---|---|
 | `enabled` | `true` | Trol açık mı |
-| `riseHeight` | `3.0` | Oyuncunun çıkması gereken ve golemin yükseleceği blok |
-| `triggerWindowTicks` | `40` | Vuruştan sonra yükselmenin sayıldığı süre (tick) |
-| `maxDistance` | `10.0` | Bu mesafeden uzaklaşınca döngü biter |
-| `cooldownResetSeconds` | `5` | Yerde bu kadar saniye vurmazsan döngü biter |
-| `golemLaunchesPlayer` | `true` | Golem her vuruşta oyuncuyu da fırlatır |
+| `climbBlocks` | `3` | Golemin her vuruşta altına koyduğu demir blok (tırmandığı blok) sayısı |
+| `maxDistance` | `10.0` | Bundan uzaktan gelen vuruşlar (ör. ok) tırmanış başlatmaz |
 
 ## Komutlar (op, seviye 2)
 | Komut | Ne yapar |
 |---|---|
-| `/igtroll on`, `/igtroll off`, `/igtroll toggle` | Trolü açar veya kapatır. `off` tüm aktif döngüleri de durdurur |
+| `/igtroll on`, `/igtroll off`, `/igtroll toggle` | Trolü açar veya kapatır. `off` devam eden tırmanışları da durdurur |
 | `/igtroll reload` | Ayar dosyasını yeniden okur |
-| `/igtroll status` veya `/igtroll` | Durumu ve aktif döngü sayısını gösterir |
+| `/igtroll status` veya `/igtroll` | Durumu ve şu an tırmanan golem sayısını gösterir |
 
 ## Derleme
 ```
 ./gradlew build
 ```
-Bu komut 3 birim testini ve 12 oyun içi testi (GameTest) de çalıştırır. Jar `build/libs/` klasörüne çıkar.
+Bu komut birim testlerini ve oyun içi testleri (GameTest) de çalıştırır. Jar `build/libs/` klasörüne çıkar.
 
 Windows'ta `install.bat` modu derler, MehburMC test instance'ına kurar ve eksikse Fabric API'yi indirir.
 

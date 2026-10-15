@@ -1,9 +1,9 @@
 {
 	"iron_golem_troll.command.enabled": "Iron Golem Troll açıldı.",
-	"iron_golem_troll.command.disabled": "Iron Golem Troll kapatıldı. Tüm aktif döngüler durduruldu.",
+	"iron_golem_troll.command.disabled": "Iron Golem Troll kapatıldı. Tüm tırmanışlar durduruldu.",
 	"iron_golem_troll.command.reloaded": "Iron Golem Troll ayarları yeniden yüklendi.",
 	"iron_golem_troll.command.reload_failed": "Ayarlar yeniden yüklenemedi, sunucu günlüğüne bak.",
-	"iron_golem_troll.command.status": "Iron Golem Troll %s. Aktif döngü: %s",
+	"iron_golem_troll.command.status": "Iron Golem Troll %s. Tırmanan golem: %s",
 	"iron_golem_troll.state.on": "AÇIK",
 	"iron_golem_troll.state.off": "KAPALI"
 }

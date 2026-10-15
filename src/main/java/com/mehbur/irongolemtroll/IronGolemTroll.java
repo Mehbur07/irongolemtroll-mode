@@ -1,15 +1,14 @@
 package com.mehbur.irongolemtroll;
 
+import com.mehbur.irongolemtroll.climb.ClimbManager;
 import com.mehbur.irongolemtroll.command.TrollCommand;
 import com.mehbur.irongolemtroll.config.TrollConfig;
-import com.mehbur.irongolemtroll.loop.TrollLoopManager;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,29 +25,30 @@ public class IronGolemTroll implements ModInitializer {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	private static final TrollLoopManager LOOPS = new TrollLoopManager();
+	private static final ClimbManager CLIMBS = new ClimbManager();
 
 	@Override
 	public void onInitialize() {
 		TrollConfig.load();
 
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamage, damageTaken, blocked) ->
-				LOOPS.onAfterDamage(entity, source, damageTaken, blocked));
-		ServerTickEvents.END_SERVER_TICK.register(LOOPS::tick);
+				CLIMBS.onAfterDamage(entity, source, damageTaken, blocked));
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> CLIMBS.allowDamage(source));
+		ServerTickEvents.END_SERVER_TICK.register(CLIMBS::tick);
 
-		// Cleanup: no loop state may outlive its player, its golem or the server.
-		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> LOOPS.forget(entity));
-		ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> LOOPS.forget(entity));
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> LOOPS.forget(handler.getPlayer()));
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> LOOPS.stopAll());
+		// Cleanup: no climb may outlive its golem or the server, and no held block its climb.
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> CLIMBS.forget(entity));
+		ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> CLIMBS.forget(entity));
+		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> CLIMBS.onEntityLoad(entity));
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CLIMBS.reset());
 
-		TrollCommand.register(LOOPS);
+		TrollCommand.register(CLIMBS);
 
 		LOGGER.info("Iron Golem Troll loaded (enabled={}).", TrollConfig.get().enabled);
 	}
 
-	/** The single loop manager, exposed for game tests. */
-	public static TrollLoopManager loops() {
-		return LOOPS;
+	/** The single climb manager, exposed for game tests. */
+	public static ClimbManager climbs() {
+		return CLIMBS;
 	}
 }
